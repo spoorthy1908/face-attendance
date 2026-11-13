@@ -15,3 +15,7 @@ DETECTION_THRESHOLD = 0.9   # minimum confidence to count as a face
 SAMPLES_PER_PERSON = 5      # how many photos to capture when registering someone
 RECOGNITION_THRESHOLD = 0.363  # how similar a face must be to count as a match (0 to 1)
 CONFIRM_FRAMES = 5             # frames in a row a face must be recognised before marking present
+LIVENESS_CHECK = True          # require a head turn before marking present
+TURN_LOW = 0.35                # nose position counted as turned one way
+TURN_HIGH = 0.65               # nose position counted as turned the other way
+LIVENESS_TIMEOUT = 3.0         # seconds before a half-finished head turn is forgotten
