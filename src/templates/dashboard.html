@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register for {{ day_label }}</title>
+  <style>
+    :root {
+      --paper: #eef2f6;
+      --sheet: #fbfcfd;
+      --ink: #1c2b4a;
+      --ink-soft: #5b6884;
+      --rule: #c9d3df;
+      --present: #2f7d5b;
+      --absent: #b4535a;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #131a26;
+        --sheet: #1b2433;
+        --ink: #e3e9f2;
+        --ink-soft: #9aa7bd;
+        --rule: #2f3b50;
+        --present: #5fc195;
+        --absent: #e48a90;
+        color-scheme: dark;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Avenir Next", Avenir, "Segoe UI", system-ui, sans-serif;
+      line-height: 1.5;
+    }
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 48px 24px;
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 40px;
+    }
+    h1 {
+      font-size: 2.4rem;
+      font-weight: 600;
+      line-height: 1.15;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+    .summary { color: var(--ink-soft); margin: 0 0 20px; font-size: 1.05rem; }
+
+    /* The tally: one dot per registered person, filled when present */
+    .tally { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 28px; }
+    .tally span {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid var(--present);
+    }
+    .tally span.on { background: var(--present); }
+
+    .sheet {
+      background: var(--sheet);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .sheet ol { list-style: none; margin: 0; padding: 0; }
+    .sheet li {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--rule);
+      font-size: 1.05rem;
+    }
+    .sheet li:last-child { border-bottom: none; }
+    .sheet .time { color: var(--present); font-variant-numeric: tabular-nums; }
+    .sheet .missing { color: var(--absent); }
+    .sheet li.absent .who { color: var(--ink-soft); }
+    .empty { padding: 28px 20px; color: var(--ink-soft); margin: 0; }
+    .empty code { background: var(--paper); padding: 2px 6px; border-radius: 4px; }
+
+    aside h2 { font-size: 1rem; font-weight: 600; margin: 0 0 10px; }
+    aside section { margin-bottom: 32px; }
+    label { display: block; font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 6px; }
+    input[type="date"] {
+      width: 100%; padding: 8px 10px; font: inherit; color: var(--ink);
+      background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px;
+    }
+    .button {
+      display: inline-block; margin-top: 10px; padding: 8px 14px;
+      background: var(--ink); color: var(--sheet); border: none; border-radius: 6px;
+      font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+    }
+    .button.quiet { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
+    .history { list-style: none; padding: 0; margin: 0; }
+    .history a {
+      display: flex; justify-content: space-between; padding: 6px 0;
+      color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule);
+    }
+    .history a:hover, .history a[aria-current="page"] { color: var(--present); }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 3px solid var(--present); outline-offset: 2px;
+    }
+    @media (max-width: 720px) {
+      .page { grid-template-columns: 1fr; padding: 32px 16px; gap: 32px; }
+      h1 { font-size: 1.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <main>
+      <h1>{{ day_label }}</h1>
+      <p class="summary">
+        {% if total %}{{ present }} of {{ total }} present{% else %}Nobody registered yet{% endif %}
+      </p>
+
+      {% if total %}
+      <div class="tally" aria-hidden="true">
+        {% for name, time in register %}<span class="{{ 'on' if time }}" title="{{ name|pretty }}"></span>{% endfor %}
+      </div>
+
+      <div class="sheet">
+        <ol>
+          {% for name, time in register %}
+          <li class="{{ 'present' if time else 'absent' }}">
+            <span class="who">{{ name|pretty }}</span>
+            {% if time %}<span class="time">arrived {{ time[:5] }}</span>
+            {% else %}<span class="missing">absent</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+      {% else %}
+      <div class="sheet">
+        <p class="empty">Register someone with <code>python src/register.py</code>, then take attendance with <code>python src/take_attendance.py</code>.</p>
+      </div>
+      {% endif %}
+    </main>
+
+    <aside>
+      <section>
+        <h2>Choose a day</h2>
+        <form method="get" action="/">
+          <label for="date">Date</label>
+          <input type="date" id="date" name="date" value="{{ day }}" max="{{ today }}">
+          <button class="button" type="submit">Show register</button>
+        </form>
+      </section>
+
+      <section>
+        <h2>Download</h2>
+        <a class="button quiet" href="/export.csv?date={{ day }}">Download CSV for this day</a>
+      </section>
+
+      <section>
+        <h2>Recent days</h2>
+        {% if history %}
+        <ul class="history">
+          {% for d, count in history %}
+          <li><a href="/?date={{ d }}" {% if d == day %}aria-current="page"{% endif %}><span>{{ d }}</span><span>{{ count }} present</span></a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="summary">No attendance taken yet.</p>
+        {% endif %}
+      </section>
+    </aside>
+  </div>
+</body>
+</html>
